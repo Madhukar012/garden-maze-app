@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Garden Maze — A brain-training puzzle game for children and adults. Navigate hedgerows, solve puzzles, sharpen your mind.">
+<meta property="og:title" content="Garden Maze — Puzzle Adventure">
+<meta property="og:description" content="5 unique brain puzzles hidden inside a beautiful garden maze. Free to play!">
+<title>Garden Maze — Puzzle Adventure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green-deep:   #1a3d0e;
+  --green-mid:    #2d6a1a;
+  --green-bright: #4a9e30;
+  --green-light:  #7dc454;
+  --gold:         #d4a43a;
+  --gold-light:   #f0c860;
+  --cream:        #faf7ee;
+  --cream-dark:   #f0ebda;
+  --text:         #1e2e14;
+  --text-mid:     #3d5428;
+  --text-light:   #6a7e54;
+  --white:        #ffffff;
+  --red:          #c0392b;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* ─── NAV ─── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 5%;
+  height: 64px;
+  background: rgba(250,247,238,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(74,158,48,0.15);
+  transition: box-shadow .3s;
+}
+nav.scrolled { box-shadow: 0 2px 24px rgba(0,0,0,0.08); }
+
+.nav-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--green-deep);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-logo span { color: var(--gold); }
+
+.nav-links {
+  display: flex;
+  gap: 32px;
+  list-style: none;
+}
+.nav-links a {
+  font-size: .875rem;
+  font-weight: 500;
+  color: var(--text-mid);
+  text-decoration: none;
+  letter-spacing: .02em;
+  transition: color .2s;
+}
+.nav-links a:hover { color: var(--green-bright); }
+
+.nav-cta {
+  background: var(--green-mid);
+  color: var(--white) !important;
+  padding: 8px 20px;
+  border-radius: 24px;
+  transition: background .2s, transform .2s !important;
+}
+.nav-cta:hover { background: var(--green-bright) !important; transform: translateY(-1px); }
+
+.hamburger { display:none; flex-direction:column; gap:5px; cursor:pointer; padding:4px; }
+.hamburger span { width:22px; height:2px; background:var(--text); border-radius:2px; transition:all .3s; display:block; }
+
+/* ─── HERO ─── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  padding: 100px 5% 60px;
+  background: linear-gradient(150deg, #e8f5dc 0%, #f5f0e0 50%, #eaf5d8 100%);
+}
+
+/* Animated garden background */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.hedge-row {
+  position: absolute;
+  bottom: 0;
+  left: 0; right: 0;
+  height: 120px;
+  background: linear-gradient(180deg, transparent 0%, #2d6a1a 60%, #1a3d0e 100%);
+  opacity: .18;
+}
+.floating-elem {
+  position: absolute;
+  animation: floatElem linear infinite;
+  opacity: 0;
+  font-size: 1.4rem;
+  pointer-events: none;
+}
+@keyframes floatElem {
+  0%   { transform: translateY(0) rotate(0deg); opacity:0; }
+  8%   { opacity:.7; }
+  92%  { opacity:.4; }
+  100% { transform: translateY(-110vh) rotate(360deg); opacity:0; }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 580px;
+}
+
+.hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(74,158,48,.12);
+  border: 1px solid rgba(74,158,48,.3);
+  border-radius: 24px;
+  padding: 6px 16px;
+  font-size: .78rem;
+  font-weight: 500;
+  color: var(--green-mid);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  animation: fadeUp .8s ease both;
+}
+
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.8rem, 6vw, 4.8rem);
+  font-weight: 900;
+  line-height: 1.08;
+  color: var(--green-deep);
+  margin-bottom: 24px;
+  animation: fadeUp .8s .1s ease both;
+}
+.hero-title .gold { color: var(--gold); font-style: italic; }
+
+.hero-desc {
+  font-size: 1.15rem;
+  line-height: 1.8;
+  color: var(--text-mid);
+  margin-bottom: 36px;
+  font-weight: 300;
+  animation: fadeUp .8s .2s ease both;
+}
+
+.hero-btns {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  animation: fadeUp .8s .3s ease both;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--green-mid), var(--green-bright));
+  color: white;
+  padding: 15px 32px;
+  border-radius: 32px;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  box-shadow: 0 6px 24px rgba(45,106,26,.35);
+  transition: transform .2s, box-shadow .2s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(45,106,26,.45); }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--green-deep);
+  padding: 14px 28px;
+  border-radius: 32px;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  border: 1.5px solid rgba(45,106,26,.3);
+  transition: all .2s;
+}
+.btn-secondary:hover { border-color: var(--green-bright); background: rgba(74,158,48,.06); }
+
+/* Hero visual / maze preview */
+.hero-visual {
+  position: absolute;
+  right: 5%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: min(420px, 45vw);
+  aspect-ratio: 1;
+  animation: fadeUp .9s .2s ease both;
+}
+
+.maze-preview {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(9, 1fr);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.2), 0 0 0 3px rgba(74,158,48,.2);
+  border: 3px solid var(--green-mid);
+}
+.mp-wall { background: var(--green-mid); }
+.mp-path { background: #d4c8a8; }
+.mp-player { background: #d4c8a8; display:flex; align-items:center; justify-content:center; font-size:1.4rem; }
+.mp-chal { background: #e8f8d8; display:flex; align-items:center; justify-content:center; font-size:1rem; animation: glow-cell 2s ease-in-out infinite; }
+@keyframes glow-cell { 0%,100%{background:#d4efc0} 50%{background:#b8e098} }
+.mp-exit { background: #b8e098; display:flex; align-items:center; justify-content:center; font-size:1.1rem; animation: glow-exit 1.5s ease-in-out infinite; }
+@keyframes glow-exit { 0%,100%{background:#a8d888} 50%{background:#78c858} }
+
+.hero-stats {
+  display: flex;
+  gap: 28px;
+  margin-top: 44px;
+  animation: fadeUp .8s .4s ease both;
+}
+.stat { text-align: center; }
+.stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--green-deep);
+  line-height: 1;
+}
+.stat-lbl {
+  font-size: .75rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(30px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ─── SECTION SHARED ─── */
+section { padding: 90px 5%; }
+
+.section-tag {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--green-bright);
+  margin-bottom: 14px;
+}
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  font-weight: 900;
+  color: var(--green-deep);
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+.section-desc {
+  font-size: 1.05rem;
+  color: var(--text-mid);
+  line-height: 1.8;
+  max-width: 600px;
+  font-weight: 300;
+}
+
+/* ─── FEATURES ─── */
+.features { background: white; }
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  margin-top: 52px;
+}
+
+.feat-card {
+  background: var(--cream);
+  border: 1.5px solid rgba(74,158,48,.15);
+  border-radius: 18px;
+  padding: 28px;
+  transition: transform .25s, box-shadow .25s;
+  position: relative;
+  overflow: hidden;
+}
+.feat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--green-bright), var(--gold));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .3s;
+}
+.feat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,.1); }
+.feat-card:hover::before { transform: scaleX(1); }
+
+.feat-icon { font-size: 2.2rem; margin-bottom: 16px; display:block; }
+.feat-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--green-deep);
+  margin-bottom: 8px;
+}
+.feat-desc { font-size: .9rem; color: var(--text-mid); line-height: 1.7; font-weight: 300; }
+
+/* ─── HOW IT WORKS ─── */
+.how { background: linear-gradient(160deg, #eaf5dc 0%, #f5f0e0 100%); }
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0;
+  margin-top: 52px;
+  position: relative;
+}
+.steps::before {
+  content: '';
+  position: absolute;
+  top: 36px; left: 10%; right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--green-bright), var(--gold), var(--green-bright));
+  opacity: .3;
+}
+
+.step {
+  text-align: center;
+  padding: 0 20px;
+  position: relative;
+  z-index: 1;
+}
+.step-num {
+  width: 72px; height: 72px;
+  background: linear-gradient(135deg, var(--green-mid), var(--green-bright));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: white;
+  margin: 0 auto 20px;
+  box-shadow: 0 6px 20px rgba(45,106,26,.3);
+}
+.step-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--green-deep);
+  margin-bottom: 8px;
+}
+.step-desc { font-size: .85rem; color: var(--text-mid); line-height: 1.7; font-weight: 300; }
+
+/* ─── PUZZLES ─── */
+.puzzles { background: white; }
+
+.puzzles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 48px;
+}
+.puzzle-card {
+  background: var(--cream);
+  border: 1.5px solid rgba(74,158,48,.15);
+  border-radius: 16px;
+  padding: 24px 20px;
+  text-align: center;
+  transition: all .25s;
+  cursor: default;
+}
+.puzzle-card:hover {
+  background: linear-gradient(135deg, #eaf8dc, #f5f5e0);
+  border-color: var(--green-bright);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(74,158,48,.15);
+}
+.puzzle-icon { font-size: 2.4rem; margin-bottom: 12px; display:block; }
+.puzzle-name {
+  font-family: 'Playfair Display', serif;
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--green-deep);
+  margin-bottom: 4px;
+}
+.puzzle-diff {
+  font-size: .72rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 500;
+}
+
+/* ─── FOR WHOM ─── */
+.audience { background: var(--green-deep); color: white; }
+.audience .section-tag { color: var(--gold-light); }
+.audience .section-title { color: white; }
+.audience .section-desc { color: rgba(255,255,255,.7); }
+
+.audience-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-top: 48px;
+}
+.aud-card {
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 18px;
+  padding: 28px;
+  transition: background .2s;
+}
+.aud-card:hover { background: rgba(255,255,255,.12); }
+.aud-emoji { font-size: 2.5rem; margin-bottom: 14px; display:block; }
+.aud-title { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; color:white; margin-bottom:8px; }
+.aud-desc { font-size:.88rem; color:rgba(255,255,255,.65); line-height:1.7; font-weight:300; }
+
+/* ─── CTA SECTION ─── */
+.cta-section {
+  background: linear-gradient(135deg, #eaf5dc 0%, #f5f0e0 100%);
+  text-align: center;
+}
+.cta-section .section-title { font-size: clamp(2rem,4vw,3.2rem); }
+.cta-section .section-desc { margin: 0 auto 36px; }
+.cta-btns { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+
+/* ─── ABOUT ─── */
+.about { background: white; }
+.about-grid { display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center; margin-top:0; }
+.about-text { }
+.about-text p { font-size:.97rem; color:var(--text-mid); line-height:1.85; font-weight:300; margin-bottom:16px; }
+.about-visual {
+  background: linear-gradient(135deg, #d4efc0, #c0e0a0);
+  border-radius: 20px;
+  height: 340px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 6rem;
+  border: 2px solid rgba(74,158,48,.2);
+  box-shadow: 0 12px 40px rgba(74,158,48,.15);
+}
+
+/* ─── CONTACT ─── */
+.contact { background: var(--cream-dark); }
+.contact-grid { display:grid; grid-template-columns:1fr 1fr; gap:60px; margin-top:0; }
+
+.contact-info h3 { font-family:'Playfair Display',serif; font-size:1.3rem; color:var(--green-deep); margin-bottom:12px; font-weight:700; }
+.contact-info p { font-size:.95rem; color:var(--text-mid); line-height:1.8; font-weight:300; margin-bottom:20px; }
+.contact-detail { display:flex; align-items:center; gap:10px; font-size:.9rem; color:var(--text-mid); margin-bottom:10px; }
+.contact-detail .ic { font-size:1.1rem; }
+
+.contact-form { display:flex; flex-direction:column; gap:14px; }
+.form-group { display:flex; flex-direction:column; gap:5px; }
+.form-label { font-size:.78rem; font-weight:500; color:var(--text-mid); letter-spacing:.04em; }
+.form-input, .form-textarea {
+  background: white;
+  border: 1.5px solid rgba(74,158,48,.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: .92rem;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  transition: border-color .2s, box-shadow .2s;
+  outline: none;
+}
+.form-input:focus, .form-textarea:focus {
+  border-color: var(--green-bright);
+  box-shadow: 0 0 0 3px rgba(74,158,48,.1);
+}
+.form-textarea { resize:vertical; min-height:120px; }
+.form-btn {
+  background: linear-gradient(135deg, var(--green-mid), var(--green-bright));
+  color: white;
+  border: none;
+  padding: 13px 28px;
+  border-radius: 28px;
+  font-size: .95rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: transform .2s, box-shadow .2s;
+  align-self: flex-start;
+}
+.form-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(45,106,26,.3); }
+
+/* ─── FOOTER ─── */
+footer {
+  background: var(--green-deep);
+  color: rgba(255,255,255,.7);
+  padding: 40px 5%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+  font-size: .85rem;
+}
+.footer-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: white;
+}
+.footer-logo span { color: var(--gold-light); }
+.footer-links { display:flex; gap:20px; }
+.footer-links a { color:rgba(255,255,255,.6); text-decoration:none; font-size:.82rem; transition:color .2s; }
+.footer-links a:hover { color:white; }
+
+/* ─── MOBILE ─── */
+@media(max-width:800px){
+  .hero-visual { display:none; }
+  .hero-content { max-width:100%; }
+  .about-grid, .contact-grid { grid-template-columns:1fr; gap:32px; }
+  .about-visual { height:200px; font-size:4rem; }
+  .steps::before { display:none; }
+  .nav-links { display:none; }
+  .hamburger { display:flex; }
+  nav.open .nav-links {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 64px; left:0; right:0;
+    background: var(--cream);
+    padding: 20px;
+    gap: 16px;
+    border-bottom: 1px solid rgba(74,158,48,.2);
+    box-shadow: 0 8px 20px rgba(0,0,0,.08);
+  }
+}
+
+/* ─── SCROLL REVEAL ─── */
+.reveal { opacity:0; transform:translateY(28px); transition:opacity .7s ease, transform .7s ease; }
+.reveal.visible { opacity:1; transform:translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">🌿 Garden <span>Maze</span></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#puzzles">Puzzles</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="play.html" class="nav-cta">▶ Play Free</a></li>
+  </ul>
+  <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg">
+    <div class="hedge-row"></div>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-tag">🌱 Free Brain Training Game</div>
+    <h1 class="hero-title">
+      Wander through the<br>
+      <span class="gold">Garden Maze</span>
+    </h1>
+    <p class="hero-desc">
+      Navigate lush hedgerows, discover hidden puzzle chambers, and sharpen your mind — one challenge at a time. Perfect for curious children and thoughtful adults alike.
+    </p>
+    <div class="hero-btns">
+      <a href="play.html" class="btn-primary">🎮 Play for Free</a>
+      <a href="#features" class="btn-secondary">Learn More ↓</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num">5</div><div class="stat-lbl">Unique Puzzles</div></div>
+      <div class="stat"><div class="stat-num">100%</div><div class="stat-lbl">Free to Play</div></div>
+      <div class="stat"><div class="stat-num">∞</div><div class="stat-lbl">Random Mazes</div></div>
+    </div>
+  </div>
+
+  <!-- Mini maze preview -->
+  <div class="hero-visual">
+    <div class="maze-preview" id="mazePreview"></div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="reveal">
+    <div class="section-tag">Why Garden Maze</div>
+    <h2 class="section-title">A game that actually<br>trains your brain</h2>
+    <p class="section-desc">Every element of Garden Maze is designed to engage your mind — not just pass the time.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feat-card reveal">
+      <span class="feat-icon">🗺️</span>
+      <div class="feat-title">Procedural Maze</div>
+      <div class="feat-desc">Every game generates a brand new maze. No two runs are ever the same — your spatial reasoning adapts every time.</div>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-icon">🧩</span>
+      <div class="feat-title">5 Puzzle Types</div>
+      <div class="feat-desc">Pattern sequences, memory cards, anagrams, word search, and logic riddles — each one trains a different part of your brain.</div>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-icon">🪙</span>
+      <div class="feat-title">Coin Economy</div>
+      <div class="feat-desc">Earn coins by exploring and solving puzzles. Spend them on hints or time extensions. Manage your resources wisely.</div>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-icon">⏱️</span>
+      <div class="feat-title">Timed Challenges</div>
+      <div class="feat-desc">Each puzzle has a time limit that keeps you focused and adds healthy pressure — just like real problem-solving situations.</div>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-icon">📱</span>
+      <div class="feat-title">Works Everywhere</div>
+      <div class="feat-desc">Play in any browser on any device — phone, tablet, laptop, or desktop. No download, no installation needed.</div>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-icon">🆓</span>
+      <div class="feat-title">Completely Free</div>
+      <div class="feat-desc">No account needed, no paywalls, no ads interrupting gameplay. Just open and play — instantly.</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="reveal" style="text-align:center;">
+    <div class="section-tag">How It Works</div>
+    <h2 class="section-title">Simple to start, deep to master</h2>
+  </div>
+  <div class="steps">
+    <div class="step reveal">
+      <div class="step-num">1</div>
+      <div class="step-title">Enter the Garden</div>
+      <div class="step-desc">You begin with 100 coins at the garden entrance. The maze sprawls before you.</div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">2</div>
+      <div class="step-title">Explore the Paths</div>
+      <div class="step-desc">Navigate branching hedgerows using arrow keys or on-screen buttons. Discover the garden's secrets.</div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">3</div>
+      <div class="step-title">Find a Challenge</div>
+      <div class="step-desc">5 glowing puzzle rooms are hidden throughout the maze. Each one unlocks a different brain challenge.</div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">4</div>
+      <div class="step-title">Solve & Earn</div>
+      <div class="step-desc">Solve the puzzle to earn 20 coins. Use hints or extra time when you need them.</div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">5</div>
+      <div class="step-title">Reach the Exit</div>
+      <div class="step-desc">Solve all 5 puzzles to unlock the garden gate. Victory grants you infinite coins forever.</div>
+    </div>
+  </div>
+</section>
+
+<!-- PUZZLES -->
+<section class="puzzles" id="puzzles">
+  <div class="reveal">
+    <div class="section-tag">The Five Trials</div>
+    <h2 class="section-title">Each puzzle, a different<br>kind of thinking</h2>
+    <p class="section-desc">Garden Maze doesn't repeat the same challenge twice. Every room you find tests your mind in a completely new way.</p>
+  </div>
+  <div class="puzzles-grid">
+    <div class="puzzle-card reveal">
+      <span class="puzzle-icon">🌸</span>
+      <div class="puzzle-name">Pattern Sequence</div>
+      <div class="puzzle-diff">Easy · Logical Thinking</div>
+    </div>
+    <div class="puzzle-card reveal">
+      <span class="puzzle-icon">🦋</span>
+      <div class="puzzle-name">Memory Match</div>
+      <div class="puzzle-diff">Easy-Med · Working Memory</div>
+    </div>
+    <div class="puzzle-card reveal">
+      <span class="puzzle-icon">🌿</span>
+      <div class="puzzle-name">Anagram</div>
+      <div class="puzzle-diff">Medium · Language Skills</div>
+    </div>
+    <div class="puzzle-card reveal">
+      <span class="puzzle-icon">🌻</span>
+      <div class="puzzle-name">Word Search</div>
+      <div class="puzzle-diff">Medium · Visual Scanning</div>
+    </div>
+    <div class="puzzle-card reveal">
+      <span class="puzzle-icon">⛲</span>
+      <div class="puzzle-name">Logic Riddles</div>
+      <div class="puzzle-diff">Hard · Reasoning</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOR WHOM -->
+<section class="audience" id="audience">
+  <div class="reveal">
+    <div class="section-tag">Who It's For</div>
+    <h2 class="section-title">Built for every curious mind</h2>
+    <p class="section-desc">Garden Maze was designed to be genuinely useful — not just entertaining.</p>
+  </div>
+  <div class="audience-cards">
+    <div class="aud-card reveal">
+      <span class="aud-emoji">🧒</span>
+      <div class="aud-title">Children (6–14)</div>
+      <div class="aud-desc">Builds pattern recognition, logical reasoning, and vocabulary in a fun, pressure-free environment. Perfect after school.</div>
+    </div>
+    <div class="aud-card reveal">
+      <span class="aud-emoji">🧑</span>
+      <div class="aud-title">Adults</div>
+      <div class="aud-desc">A satisfying daily brain workout. Break the doom-scrolling cycle with something that actually challenges you.</div>
+    </div>
+    <div class="aud-card reveal">
+      <span class="aud-emoji">👴</span>
+      <div class="aud-title">Senior Citizens</div>
+      <div class="aud-desc">Gentle, engaging cognitive stimulation. Studies show puzzle play helps maintain sharpness and memory as we age.</div>
+    </div>
+    <div class="aud-card reveal">
+      <span class="aud-emoji">🏫</span>
+      <div class="aud-title">Schools & Teachers</div>
+      <div class="aud-desc">Use Garden Maze as a classroom enrichment tool — covers logic, language, memory, and spatial reasoning in one game.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="reveal">
+    <div class="section-tag">Ready to Play?</div>
+    <h2 class="section-title">Your garden adventure<br>starts right now</h2>
+    <p class="section-desc">No login. No download. No cost. Just open and start exploring.</p>
+    <div class="cta-btns">
+      <a href="play.html" class="btn-primary" style="font-size:1.1rem;padding:17px 38px;">🎮 Play Garden Maze — Free</a>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="about" id="about">
+  <div class="about-grid">
+    <div class="about-text reveal">
+      <div class="section-tag">About This Project</div>
+      <h2 class="section-title">Built to help,<br>designed to delight</h2>
+      <p>Garden Maze was created with a simple belief — games should do more than entertain. Every puzzle in this game is chosen because it trains a real cognitive skill that matters in everyday life.</p>
+      <p>Pattern recognition helps children understand mathematics. Memory training supports long-term learning. Logic puzzles develop reasoning skills that carry into every career. And exploration — wandering the maze, discovering what's around the corner — nurtures natural curiosity.</p>
+      <p>This project is built with love, and it will always be free to play. Because access to good brain training shouldn't depend on how much money you have.</p>
+    </div>
+    <div class="about-visual reveal">🌳</div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+  <div class="contact-grid">
+    <div class="contact-info reveal">
+      <div class="section-tag">Get in Touch</div>
+      <h2 class="section-title">We'd love<br>to hear from you</h2>
+      <p>Whether you're a teacher who wants to use this in a classroom, a parent with feedback, or a developer who wants to collaborate — reach out.</p>
+      <div class="contact-detail"><span class="ic">📧</span> hello@gardenmaze.app</div>
+      <div class="contact-detail"><span class="ic">🌐</span> gardenmaze.vercel.app</div>
+      <div class="contact-detail"><span class="ic">🏫</span> School licensing available</div>
+    </div>
+    <div class="reveal">
+      <div class="contact-form">
+        <div class="form-group">
+          <label class="form-label">Your Name</label>
+          <input class="form-input" type="text" placeholder="e.g. Priya Sharma">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-input" type="email" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Message</label>
+          <textarea class="form-textarea" placeholder="Tell us what you think, or how we can help you..."></textarea>
+        </div>
+        <button class="form-btn" onclick="handleSubmit()">Send Message 🌿</button>
+        <div id="formMsg" style="font-size:.85rem;color:var(--green-bright);display:none">✅ Message sent! We'll get back to you soon.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">🌿 Garden <span>Maze</span></div>
+  <div style="font-size:.78rem">© 2025 Garden Maze · Built with ❤️ to train minds</div>
+  <div class="footer-links">
+    <a href="#home">Home</a>
+    <a href="play.html">Play</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+  </div>
+</footer>
+
+<script>
+// NAV scroll effect
+window.addEventListener('scroll',()=>{
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY>20);
+});
+
+// Mobile menu
+function toggleMenu(){
+  document.getElementById('navbar').classList.toggle('open');
+}
+
+// Scroll reveal
+const obs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); });
+},{threshold:0.12});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// Maze preview animation
+const LAYOUT=[
+  [1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,1,0,0,0,1],
+  [1,0,1,0,1,0,1,0,1],
+  [1,0,1,0,0,0,1,0,1],
+  [1,0,1,1,1,0,1,0,1],
+  [1,0,0,0,0,0,1,0,1],
+  [1,1,1,0,1,1,1,0,1],
+  [1,0,0,0,0,0,0,3,1],
+  [1,1,1,1,1,1,1,1,1],
+];
+const CHALLENGES=[[1,3],[3,5],[5,1]];
+const mp=document.getElementById('mazePreview');
+if(mp){
+  LAYOUT.forEach((row,r)=>row.forEach((cell,c)=>{
+    const d=document.createElement('div');
+    const isChal=CHALLENGES.some(([cr,cc])=>cr===r&&cc===c);
+    const isPlayer=r===1&&c===1;
+    if(isPlayer) { d.className='mp-player'; d.textContent='🧑'; }
+    else if(cell===3) { d.className='mp-exit'; d.textContent='🚪'; }
+    else if(isChal) { d.className='mp-chal'; d.textContent=['🌸','🌿','⛲'][CHALLENGES.findIndex(([cr,cc])=>cr===r&&cc===c)]; }
+    else if(cell===1) d.className='mp-wall';
+    else d.className='mp-path';
+    mp.appendChild(d);
+  }));
+}
+
+// Floating elements
+const elems=['🌸','🌺','🍃','🌼','🌿','🍂','🦋','🐝'];
+for(let i=0;i<16;i++){
+  const el=document.createElement('div');
+  el.className='floating-elem';
+  el.textContent=elems[Math.floor(Math.random()*elems.length)];
+  el.style.cssText=`left:${Math.random()*100}%;top:${80+Math.random()*20}%;animation-duration:${14+Math.random()*14}s;animation-delay:${Math.random()*14}s;font-size:${.8+Math.random()*.8}rem`;
+  document.querySelector('.hero-bg').appendChild(el);
+}
+
+// Contact form
+function handleSubmit(){
+  const msg=document.getElementById('formMsg');
+  msg.style.display='block';
+  setTimeout(()=>msg.style.display='none',4000);
+}
+</script>
+</body>
+</html>

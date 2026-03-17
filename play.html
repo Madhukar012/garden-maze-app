@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Play — Garden Maze</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{ margin:0; padding:0; box-sizing:border-box; }
+body{ background:#1a3d0e; font-family:'DM Sans',sans-serif; min-height:100vh; display:flex; flex-direction:column; }
+.play-nav{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 24px; height:56px;
+  background:rgba(10,24,6,0.9); backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  flex-shrink:0;
+}
+.play-nav a{
+  font-family:'Playfair Display',serif; font-size:1rem; font-weight:900;
+  color:white; text-decoration:none; display:flex; align-items:center; gap:7px;
+}
+.play-nav a span{ color:#d4a43a; }
+.back-btn{
+  color:rgba(255,255,255,0.6); text-decoration:none; font-size:.82rem;
+  display:flex; align-items:center; gap:5px; transition:color .2s;
+}
+.back-btn:hover{ color:white; }
+.game-frame{
+  flex:1; display:flex; align-items:center; justify-content:center;
+  padding:16px;
+}
+iframe{
+  width:100%; max-width:1000px; height:calc(100vh - 100px);
+  border:none; border-radius:14px;
+  box-shadow:0 20px 60px rgba(0,0,0,.5), 0 0 0 2px rgba(74,158,48,.3);
+}
+</style>
+</head>
+<body>
+<nav class="play-nav">
+  <a href="index.html">🌿 Garden <span>Maze</span></a>
+  <a href="index.html" class="back-btn">← Back to Home</a>
+</nav>
+<div class="game-frame">
+  <iframe src="game/garden-maze-v3.html" title="Garden Maze Game" allowfullscreen></iframe>
+</div>
+</body>
+</html>

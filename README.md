@@ -1,81 +1,34 @@
-# 🌿 Garden Maze — Web App
+# 🌿 Garden Maze
 
-A brain-training puzzle game built as a multi-page website.
+A beautiful browser-based brain training puzzle game where you 
+navigate a garden maze and solve 5 unique challenges hidden 
+among the hedgerows.
 
----
+## 🎮 Play Now
+👉 [Play Garden Maze](https://garden-maze-app.vercel.app)
 
-## 📁 Project Structure
+## 🧩 Puzzles Inside
+- 🌸 Pattern Sequence — spot the number rule
+- 🦋 Memory Match — find the animal pairs  
+- 🌿 Anagram — unscramble the garden word
+- 🌻 Word Search — find hidden flower names
+- ⛲ Logic Riddles — 92 general aptitude questions
 
-```
-garden-maze-app/
-├── index.html        ← Main landing page (home)
-├── play.html         ← Play page (embeds the game)
-├── game/
-│   └── garden-maze-v3.html  ← The actual game (copy here)
-└── README.md
-```
+## ✨ Features
+- Procedurally generated maze — different every time
+- Coin economy — earn by exploring and solving
+- Challenge radar — compass guides you to each puzzle
+- Hints system — up to 3 guided hints per challenge
+- Wrong answer reveals the solution with explanation
+- Works in any browser — no install needed
 
----
+## 🛠️ Built With
+- HTML5, CSS3, Vanilla JavaScript
+- No frameworks, no dependencies
+- Single file game architecture
 
-## 🚀 How to Set Up (Step by Step)
+## 🚀 Deployment
+Hosted free on Vercel — auto deploys on every GitHub push.
 
-### Step 1 — Copy the game file
-Copy `garden-maze-v3.html` into the `game/` folder inside this project.
-
-### Step 2 — View locally
-Open `index.html` in your browser. Click "Play Free" to test the game.
-
-### Step 3 — Push to GitHub
-
-Open VS Code terminal (Ctrl + `) and run:
-
-```bash
-git init
-git add .
-git commit -m "first commit - garden maze website"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/garden-maze-app.git
-git push -u origin main
-```
-
-Replace YOUR_USERNAME with your actual GitHub username.
-
-### Step 4 — Deploy to Vercel (FREE)
-
-1. Go to https://vercel.com
-2. Sign up with your GitHub account
-3. Click "Add New Project"
-4. Select your `garden-maze-app` repository
-5. Click "Deploy"
-6. Done! Your site is live at: https://garden-maze-app.vercel.app 🎉
-
-### Step 5 — Buy a Domain (Optional)
-
-1. Go to https://namecheap.com
-2. Search for a name like `gardenmaze.com` or `gardenmazegame.com`
-3. Buy it (~$10-15/year)
-4. In Vercel → your project → Settings → Domains → Add your domain
-5. Follow Namecheap's instructions to point the domain to Vercel
-
----
-
-## ✅ Checklist
-
-- [ ] Node.js installed
-- [ ] VS Code installed
-- [ ] GitHub account created
-- [ ] Game file copied to /game folder
-- [ ] Tested locally in browser
-- [ ] Pushed to GitHub
-- [ ] Deployed on Vercel
-- [ ] Custom domain added (optional)
-
----
-
-## 🔮 Coming Next
-
-- [ ] Firebase login & user accounts
-- [ ] Progress tracking per user
-- [ ] Leaderboard
-- [ ] React Native mobile app
-- [ ] Google Play Store listing
+## 👨‍💻 Developer
+Built by Madhukar — learning, helping, serving and growing.

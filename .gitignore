@@ -1,0 +1,10 @@
+# Firebase config — contains API keys, never commit this
+firebase-config.js
+
+# Other files to ignore
+node_modules/
+.env
+.env.local
+*.log
+.DS_Store
+Thumbs.db

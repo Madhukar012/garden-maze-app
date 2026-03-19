@@ -603,7 +603,6 @@ async function saveUserToDatabase(user, displayName=''){
         email:        user.email,
         coins:        100,
         puzzlesSolved: 0,
-        gamesPlayed:  0,
         joinedAt:     firebase.firestore.FieldValue.serverTimestamp(),
         lastPlayed:   firebase.firestore.FieldValue.serverTimestamp(),
         provider:     user.providerData[0]?.providerId || 'email',

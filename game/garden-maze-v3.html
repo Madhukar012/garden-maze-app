@@ -2308,7 +2308,7 @@ function showLobby(){
       ${progressMsg}
       <p>You have ${coinsDisplay} and a maze full of secrets.
         ${G.infinite
-          ? 'All puzzle chambers are unlocked — click any stage card to play directly, or enter the maze to explore.'
+          ? 'All puzzle chambers are unlocked — click any stage card to play directly'
           : 'Wander the hedgerows until you find all <strong style="color:var(--green-dark)">5 challenge spots</strong> glowing among the flowers.'}
       </p>
       <div class="stage-cards" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:20px 0">
@@ -2324,7 +2324,7 @@ function showLobby(){
         </button>
       </div>
       <p style="margin-top:16px;font-size:.78rem;color:var(--text-light)">
-        Arrow Keys or WASD to walk · Each challenge costs 10🪙 · Solving rewards 20🪙
+        Arrow Keys to walk · Each challenge costs 10🪙 · Solving rewards 20🪙
       </p>
     </div>`;
   updateStatus();
@@ -2446,7 +2446,6 @@ async function saveProgress(){
         puzzlesSolved:  G.challenges.filter(c=>c.solved).length,
         solvedPuzzles:  solvedKeys,
         infinite:       G.infinite,
-        gamesPlayed:    firebase.firestore.FieldValue.increment(0),
         lastPlayed:     firebase.firestore.FieldValue.serverTimestamp(),
       });
     // Also update leaderboard

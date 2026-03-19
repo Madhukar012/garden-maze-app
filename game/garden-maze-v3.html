@@ -441,7 +441,13 @@ body {
 .txt-in:focus { outline:none; border-color:var(--grass); box-shadow:0 0 0 3px rgba(90,158,64,0.15); }
 
 /* WORD SEARCH */
-.ws-grid { display:inline-grid; gap:3px; }
+.ws-grid { 
+  display:inline-grid; 
+  gap:3px; 
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
 .wsc { width:32px; height:32px; background:#f8f6ee; border:1px solid #d8d0b0; border-radius:4px; display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:.85rem; cursor:pointer; user-select:none; color:var(--text-dark); transition:all .15s; font-weight:700; }
 .wsc.sel { background:#d8f0b8; border-color:var(--grass); color:var(--green-dark); }
 .wsc.found { background:#b8e8a0; border-color:var(--green-ok); color:var(--green-dark); }
@@ -1417,7 +1423,13 @@ function genWS(){
   G.puzzle={type:'wordsearch',grid,words:placed,found:[],sel:[],N,hintsUsed:0};
   let h=`<div><div style="overflow-x:auto"><div class="ws-grid" id="wsG" style="grid-template-columns:repeat(${N},32px)">`;
   for(let y=0;y<N;y++) for(let x=0;x<N;x++)
-    h+=`<div class="wsc" id="ws_${x}_${y}" onmousedown="wsStart(${x},${y})" onmouseover="wsOver(${x},${y})">${grid[y][x]}</div>`;
+    h+=`<div class="wsc" id="ws_${x}_${y}" 
+        onmousedown="wsStart(${x},${y})" 
+        onmouseover="wsOver(${x},${y})"
+        ontouchstart="wsCellTouch(event,${x},${y})"
+        ontouchmove="wsCellTouchMove(event)"
+        ontouchend="wsCellTouchEnd(event)"
+        >${grid[y][x]}</div>`;
   h+=`</div></div><div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:12px">`;
   placed.forEach(({word})=>h+=`<span class="w-item" id="wi_${word}">${word}</span>`);
   h+=`</div></div>`;
@@ -1447,6 +1459,31 @@ function wsEnd(){
     if(p.found.length===p.words.length) challengeSolved();
   }
   p.sel=[]; wsHL();
+}
+// ── TOUCH HANDLERS FOR WORD SEARCH ────────────────────────
+function wsCellTouch(e, x, y){
+  e.preventDefault(); // stop page scroll
+  e.stopPropagation();
+  wsStart(x, y);
+}
+
+function wsCellTouchMove(e){
+  e.preventDefault();
+  e.stopPropagation();
+  // Find which cell the finger is currently over
+  const touch = e.touches[0];
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  if(!el) return;
+  // Cell IDs are like ws_3_5 — extract x and y
+  const match = el.id && el.id.match(/^ws_(\d+)_(\d+)$/);
+  if(!match) return;
+  wsOver(parseInt(match[1]), parseInt(match[2]));
+}
+
+function wsCellTouchEnd(e){
+  e.preventDefault();
+  e.stopPropagation();
+  wsEnd();
 }
 function wsHL(){
   const p=G.puzzle; if(!p||p.type!=='wordsearch'||!p.words) return;

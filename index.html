@@ -467,7 +467,6 @@ section { padding: 90px 5%; }
 /* ─── ABOUT ─── */
 .about { background: white; }
 .about-grid { display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center; margin-top:0; }
-.about-text { }
 .about-text p { font-size:.97rem; color:var(--text-mid); line-height:1.85; font-weight:300; margin-bottom:16px; }
 .about-visual {
   background: linear-gradient(135deg, #d4efc0, #c0e0a0);
@@ -584,6 +583,8 @@ footer {
     <li><a href="#puzzles">Puzzles</a></li>
     <li><a href="#about">About</a></li>
     <li><a href="#contact">Contact</a></li>
+    <li><a href="profile.html" id="navProfile" style="display:none">👤 My Garden</a></li>
+    <li><a href="login.html" id="navLogin" class="nav-cta">Sign In</a></li>
     <li><a href="play.html" class="nav-cta">▶ Play Free</a></li>
   </ul>
   <div class="hamburger" id="hamburger" onclick="toggleMenu()">
@@ -827,7 +828,7 @@ footer {
 <!-- FOOTER -->
 <footer>
   <div class="footer-logo">🌿 Garden <span>Maze</span></div>
-  <div style="font-size:.78rem">© 2025 Garden Maze · Built with ❤️ to train minds</div>
+  <div style="font-size:.78rem">© 2026 Garden Maze · Built with passion to train minds</div>
   <div class="footer-links">
     <a href="#home">Home</a>
     <a href="play.html">Play</a>
@@ -897,6 +898,19 @@ function handleSubmit(){
   msg.style.display='block';
   setTimeout(()=>msg.style.display='none',4000);
 }
+</script>
+<!-- Firebase — check login state for nav -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+auth.onAuthStateChanged(user => {
+  if(user){
+    document.getElementById('navLogin').style.display   = 'none';
+    document.getElementById('navProfile').style.display = 'block';
+  }
+});
 </script>
 </body>
 </html>

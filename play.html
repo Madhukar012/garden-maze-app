@@ -20,11 +20,31 @@ body{ background:#1a3d0e; font-family:'DM Sans',sans-serif; min-height:100vh; di
   color:white; text-decoration:none; display:flex; align-items:center; gap:7px;
 }
 .play-nav a span{ color:#d4a43a; }
+.nav-right{ display:flex; align-items:center; gap:14px; }
 .back-btn{
   color:rgba(255,255,255,0.6); text-decoration:none; font-size:.82rem;
   display:flex; align-items:center; gap:5px; transition:color .2s;
 }
 .back-btn:hover{ color:white; }
+.user-chip{
+  display:flex; align-items:center; gap:7px;
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15);
+  border-radius:20px; padding:5px 12px; font-size:.78rem; color:rgba(255,255,255,.8);
+  text-decoration:none; transition:all .2s;
+}
+.user-chip:hover{ background:rgba(255,255,255,.14); color:white; }
+.user-avatar{
+  width:22px; height:22px; border-radius:50%;
+  background:linear-gradient(135deg,#2d6a1a,#4a9e30);
+  display:flex; align-items:center; justify-content:center;
+  font-size:.7rem; font-weight:700; color:white;
+}
+.btn-login{
+  background:linear-gradient(135deg,#2d6a1a,#4a9e30); color:white;
+  padding:6px 14px; border-radius:20px; font-size:.78rem;
+  text-decoration:none; transition:all .2s;
+}
+.btn-login:hover{ opacity:.9; }
 .game-frame{
   flex:1; display:flex; align-items:center; justify-content:center;
   padding:16px;
@@ -39,10 +59,41 @@ iframe{
 <body>
 <nav class="play-nav">
   <a href="index.html">🌿 Garden <span>Maze</span></a>
-  <a href="index.html" class="back-btn">← Back to Home</a>
+  <div class="nav-right">
+    <!-- Shown when logged in -->
+    <a href="profile.html" class="user-chip" id="userChip" style="display:none">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <span id="userName">My Garden</span>
+    </a>
+    <!-- Shown when logged out -->
+    <a href="login.html" class="btn-login" id="loginBtn">Sign In</a>
+    <a href="index.html" class="back-btn">← Home</a>
+  </div>
 </nav>
 <div class="game-frame">
   <iframe src="game/garden-maze-v3.html" title="Garden Maze Game" allowfullscreen></iframe>
 </div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+auth.onAuthStateChanged(user => {
+  if(user){
+    // Show user chip, hide login button
+    document.getElementById('userChip').style.display = 'flex';
+    document.getElementById('loginBtn').style.display = 'none';
+    // Set avatar and name
+    const name = user.displayName || user.email.split('@')[0];
+    document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
+    document.getElementById('userName').textContent   = name.split(' ')[0];
+  } else {
+    document.getElementById('userChip').style.display = 'none';
+    document.getElementById('loginBtn').style.display = 'block';
+  }
+});
+</script>
 </body>
 </html>

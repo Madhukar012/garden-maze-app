@@ -19,8 +19,6 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-console.log("✅ Firebase connected successfully!");
 `;
 
 fs.writeFileSync('firebase-config.js', config);
-console.log('✅ firebase-config.js generated from environment variables');

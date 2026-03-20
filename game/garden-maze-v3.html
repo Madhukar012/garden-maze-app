@@ -2614,36 +2614,60 @@ async function resetProgressInDB(){
 
 // Start game — loading saved progress if available
 async function startWithProgress(){
-
   initNetworkMonitor();
   initFirebase();
 
-  // ── Check if Firebase loaded correctly ──────────────
-  if(typeof firebase === 'undefined'){
-    showFirebaseError(
-      'Game services are loading...',
-      'Please refresh the page. If the problem persists, check your internet connection.'
-    );
-    return;
+  // ── Wait for Firebase Auth to restore session ──────────────
+  // Firebase Auth persists login even after browser closes
+  // We must WAIT for it to tell us who is logged in
+  // instead of reading from sessionStorage (which clears on close)
+
+  if(typeof firebase !== 'undefined'){
+    await new Promise(resolve => {
+      const unsubscribe = firebase.auth().onAuthStateChanged(user => {
+        unsubscribe(); // stop listening after first response
+        if(user){
+          // Restore FB_USER from Firebase Auth (not sessionStorage)
+          FB_USER = {
+            uid:   user.uid,
+            name:  user.displayName || user.email.split('@')[0],
+            email: user.email
+          };
+          // Also refresh sessionStorage for other pages
+          sessionStorage.setItem('gm_uid',   user.uid);
+          sessionStorage.setItem('gm_name',  FB_USER.name);
+          sessionStorage.setItem('gm_email', user.email);
+          console.log('✅ Firebase Auth restored session:', FB_USER.name);
+        } else {
+          FB_USER = null;
+          console.log('ℹ️ No logged in user — playing as guest');
+        }
+        resolve();
+      });
+    });
   }
 
-  // Show loading indicator while fetching progress
+  // ── Now load progress with correct FB_USER ─────────────────
   showGameLoading(true);
   const saved = await loadProgress();
   showGameLoading(false);
 
   if(saved && saved.puzzlesSolved > 0){
-    // Restore coins and infinite state
-    G.coins    = saved.infinite ? 999999 : safeCoins(saved.coins || 100);
-    G.infinite = saved.infinite || false;
-    // Mark which challenges were already solved
+    G.coins        = saved.infinite ? 999999 : safeCoins(saved.coins || 100);
+    G.infinite     = saved.infinite || false;
     G._savedSolved = saved.solvedPuzzles || [];
-    if(saved.infinite) notify('🏆 Infinite coins active — all stages open!','ok');
-    else notify(`🌿 Welcome back! ${saved.puzzlesSolved}/5 puzzles solved — continuing your journey.`,'ok');
+    if(saved.infinite)
+      notify('🏆 Infinite coins active — all stages open!','ok');
+    else
+      notify(
+        `🌿 Welcome back, ${FB_USER?.name||'Explorer'}! `+
+        `${saved.puzzlesSolved}/5 puzzles completed.`,
+        'ok'
+      );
   }
+
   showLobby();
 }
-
 
 // Show/hide loading spinner while fetching Firebase progress
 function showGameLoading(show){

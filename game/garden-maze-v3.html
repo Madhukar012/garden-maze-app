@@ -2410,15 +2410,111 @@ for(let i=0;i<3;i++){
 // FIREBASE — Progress Save & Load
 // ============================================================
 let FB_USER = null; // logged in user, null if guest
+let isOnline = navigator.onLine;
+let pendingSave = false; // tracks if a save is waiting
+
+function initNetworkMonitor(){
+  // Show banner when going offline
+  window.addEventListener('offline', ()=>{
+    isOnline = false;
+    showNetworkBanner(false);
+  });
+
+  // Hide banner and retry save when back online
+  window.addEventListener('online', ()=>{
+    isOnline = true;
+    showNetworkBanner(true);
+    // Auto retry any pending save
+    if(pendingSave){
+      pendingSave = false;
+      notify('🌿 Back online — saving your progress...','ok');
+      setTimeout(()=>saveProgress(), 1000);
+    }
+  });
+}
+
+function showNetworkBanner(backOnline){
+  // Remove existing banner first
+  const existing = document.getElementById('networkBanner');
+  if(existing) existing.remove();
+
+  if(backOnline){
+    // Show brief "back online" message then remove
+    const banner = document.createElement('div');
+    banner.id = 'networkBanner';
+    banner.style.cssText = `
+      position:fixed;top:0;left:0;right:0;z-index:999;
+      background:#27ae60;color:white;text-align:center;
+      padding:10px;font-family:'Playfair Display',serif;font-size:.85rem;
+      font-weight:700;
+    `;
+    banner.textContent = '✅ Back online! Your progress is being saved.';
+    document.body.appendChild(banner);
+    setTimeout(()=>banner.remove(), 3000);
+  } else {
+    // Show persistent offline warning
+    const banner = document.createElement('div');
+    banner.id = 'networkBanner';
+    banner.style.cssText = `
+      position:fixed;top:0;left:0;right:0;z-index:999;
+      background:#e67e22;color:white;text-align:center;
+      padding:10px;font-family:'Playfair Display',serif;font-size:.85rem;
+      font-weight:700;
+    `;
+    banner.textContent = '⚠️ You are offline — progress will save automatically when reconnected.';
+    document.body.appendChild(banner);
+  }
+}
 
 function initFirebase(){
   try {
-    // Read user from sessionStorage (set by login.html)
     const uid   = sessionStorage.getItem('gm_uid');
     const name  = sessionStorage.getItem('gm_name');
     const email = sessionStorage.getItem('gm_email');
-    if(uid){ FB_USER = {uid, name, email}; }
-  } catch(e){ FB_USER = null; }
+    if(uid){
+      FB_USER = { uid, name, email };
+
+      // Verify session is still valid 
+      if(typeof firebase !== 'undefined'){
+        firebase.auth().onAuthStateChanged(user => {
+          if(!user && FB_USER){
+            // Session expired — user was logged in but token is gone
+            console.warn('Session expired — redirecting to login');
+            sessionStorage.clear();
+            FB_USER = null;
+            showSessionExpired();
+          }
+        });
+      }
+
+    } else {
+      console.log('ℹ️ No logged in user — playing as guest');
+    }
+  } catch(e){
+    FB_USER = null;
+    console.warn('Firebase init failed:', e);
+  }
+}
+
+// Show session expired message
+function showSessionExpired(){
+  // Only show if user was previously logged in
+  if(!document.getElementById('content')) return;
+  showConf(
+    `<div style="font-size:2.5rem;margin-bottom:10px">🔐</div>
+     <h3>Session Expired</h3>
+     <p>Your login session has expired. Please sign in again to save your progress.</p>
+     <div style="display:flex;gap:10px;justify-content:center">
+       <button class="btn btn-garden" onclick="window.location.href='../login.html'">
+         Sign In Again
+       </button>
+       <button class="btn btn-ghost" onclick="_cn()">
+         Continue as Guest
+       </button>
+     </div>`,
+    ()=>{ window.location.href='../login.html'; },
+    ()=>{ FB_USER=null; notify('Playing as guest — progress will not be saved.'); }
+  );
 }
 
 // Load saved progress from Firestore
@@ -2435,29 +2531,66 @@ async function loadProgress(){
 // Save progress to Firestore after every challenge solved
 async function saveProgress(){
   if(!FB_USER || typeof firebase === 'undefined') return;
+
+  // If offline, mark as pending and notify
+  if(!navigator.onLine){
+    pendingSave = true;
+    notify('⚠️ Offline — progress will save when reconnected.','err');
+    return;
+  }
+
   try {
     const solvedKeys = G.challenges
       .filter(c=>c.solved)
       .map(c=>CDEFS[c.id].type);
+
+    const solvedCount = solvedKeys.length;
+    const coinsToSave = G.infinite ? 999999 : safeCoins(G.coins);
+
+    // Save to users collection
     await firebase.firestore()
-      .collection('users').doc(FB_USER.uid)
+      .collection('users')
+      .doc(FB_USER.uid)
       .update({
-        coins:          G.infinite ? 999999 : safeCoins(G.coins),
-        puzzlesSolved:  G.challenges.filter(c=>c.solved).length,
-        solvedPuzzles:  solvedKeys,
-        infinite:       G.infinite,
-        lastPlayed:     firebase.firestore.FieldValue.serverTimestamp(),
+        coins:         coinsToSave,
+        infinite:      G.infinite,
+        solvedPuzzles: solvedKeys,
+        puzzlesSolved: solvedCount,
+        lastPlayed:    firebase.firestore.FieldValue.serverTimestamp(),
       });
-    // Also update leaderboard
+
+    // Save to leaderboard
     await firebase.firestore()
-      .collection('leaderboard').doc(FB_USER.uid)
+      .collection('leaderboard')
+      .doc(FB_USER.uid)
       .update({
-        coins:         G.infinite ? 999999 : safeCoins(G.coins),
-        puzzlesSolved: G.challenges.filter(c=>c.solved).length,
+        coins:         coinsToSave,
+        puzzlesSolved: solvedCount,
         updatedAt:     firebase.firestore.FieldValue.serverTimestamp(),
       });
-    console.log('✅ Progress saved to Firebase');
-  } catch(e){ console.warn('Could not save progress:', e); }
+
+    console.log('✅ Progress saved!');
+    pendingSave = false;
+
+  } catch(e){
+    console.warn('Save failed:', e);
+
+    // Notify user clearly with specific reason
+    if(e.code === 'unavailable' || e.code === 'failed-precondition'){
+      pendingSave = true;
+      notify('⚠️ Could not save — retrying when connection improves.','err');
+      // Auto retry after 5 seconds
+      setTimeout(()=>{
+        if(pendingSave) saveProgress();
+      }, 5000);
+    } else if(e.code === 'permission-denied'){
+      notify('⚠️ Save failed — please sign in again to save progress.','err');
+      showSessionExpired();
+    } else {
+      notify('⚠️ Progress could not be saved. Check your connection.','err');
+      pendingSave = true;
+    }
+  }
 }
 
 // Reset progress in Firestore when user resets game
@@ -2481,8 +2614,24 @@ async function resetProgressInDB(){
 
 // Start game — loading saved progress if available
 async function startWithProgress(){
+
+  initNetworkMonitor();
   initFirebase();
+
+  // ── Check if Firebase loaded correctly ──────────────
+  if(typeof firebase === 'undefined'){
+    showFirebaseError(
+      'Game services are loading...',
+      'Please refresh the page. If the problem persists, check your internet connection.'
+    );
+    return;
+  }
+
+  // Show loading indicator while fetching progress
+  showGameLoading(true);
   const saved = await loadProgress();
+  showGameLoading(false);
+
   if(saved && saved.puzzlesSolved > 0){
     // Restore coins and infinite state
     G.coins    = saved.infinite ? 999999 : safeCoins(saved.coins || 100);
@@ -2495,8 +2644,80 @@ async function startWithProgress(){
   showLobby();
 }
 
+
+// Show/hide loading spinner while fetching Firebase progress
+function showGameLoading(show){
+  let el = document.getElementById('gameLoadingMsg');
+  if(show){
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'gameLoadingMsg';
+      el.style.cssText = `
+        position:fixed;inset:0;
+        background:rgba(232,245,220,0.95);
+        display:flex;flex-direction:column;
+        align-items:center;justify-content:center;
+        z-index:500;font-family:'Playfair Display',serif;
+      `;
+      el.innerHTML = `
+        <div style="font-size:3rem;margin-bottom:14px;
+          animation:spin .8s linear infinite">🌿</div>
+        <div style="font-size:1.1rem;color:var(--green-dark);font-weight:700">
+          Loading your garden...
+        </div>
+        <div style="font-size:.8rem;color:var(--text-light);margin-top:8px">
+          Fetching your progress
+        </div>
+      `;
+      document.body.appendChild(el);
+    }
+  } else {
+    if(el) el.remove();
+  }
+}
+
+// Show friendly error when Firebase completely fails to load
+function showFirebaseError(title, msg){
+  const content = document.getElementById('content');
+  if(!content) return;
+  content.innerHTML = `
+    <div style="text-align:center;padding:60px 20px;
+      background:var(--panel-bg);border-radius:18px;
+      border:1.5px solid var(--panel-border);max-width:480px;margin:0 auto">
+      <div style="font-size:3rem;margin-bottom:16px">🌿</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.3rem;
+        color:var(--green-dark);margin-bottom:10px">${title}</div>
+      <div style="font-size:.9rem;color:var(--text-mid);
+        line-height:1.7;margin-bottom:24px">${msg}</div>
+      <button onclick="location.reload()"
+        class="btn btn-garden"
+        style="padding:12px 28px;font-size:.95rem">
+        🔄 Refresh Page
+      </button>
+    </div>
+  `;
+}
+
+
 // ── Start the game ──────────────────────────────────────────
 startWithProgress();
 </script>
+
+<!-- ## 📖 Quick Reference Card
+```
+To add a new LOGIC QUESTION:
+  Add object to LPOOL with q, opts, ans, reason, hints
+
+To add new WORD SEARCH words:
+  Add UPPERCASE word (max 7 letters) to WS_ALL_WORDS
+
+To add new ANAGRAM word:
+  Add 'WORD': ["hint1","hint2","hint3"] to AWORD_HINTS
+
+To add new MEMORY emoji:
+  Add emoji string to MEMOJI array
+
+To add new PATTERN type:
+  Add arrow function returning {seq,ans,rule} to all array -->
 </body>
 </html>

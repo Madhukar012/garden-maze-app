@@ -481,6 +481,7 @@ input[type="password"]::-webkit-textfield-decoration-container {
   </div>
 </div>
 
+
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -490,6 +491,16 @@ input[type="password"]::-webkit-textfield-decoration-container {
 <script src="firebase-config.js"></script>
 
 <script>
+
+const isDev = window.location.hostname === 'localhost' ||
+              window.location.hostname === '127.0.0.1';
+const log = {
+  info:  (...args) => { if(isDev) console.log('ℹ️', ...args); },
+  ok:    (...args) => { if(isDev) console.log('✅', ...args); },
+  warn:  (...args) => { if(isDev) console.warn('⚠️', ...args); },
+  error: (...args) => { if(isDev) console.error('❌', ...args); },
+};
+
 // ── TAB SWITCHING ──────────────────────────────────────────
 function switchTab(tab){
   const isSignIn = tab === 'signin';
@@ -615,16 +626,16 @@ async function saveUserToDatabase(user, displayName=''){
         puzzlesSolved: 0,
         updatedAt:    firebase.firestore.FieldValue.serverTimestamp(),
       });
-      console.log('✅ New user profile created in database');
+      log.ok('✅ New user profile created in database');
     } else {
       // Existing user — update last login time
       await userRef.update({
         lastPlayed: firebase.firestore.FieldValue.serverTimestamp(),
       });
-      console.log('✅ Existing user — last login updated');
+      log.ok('✅ Existing user — last login updated');
     }
   } catch(err){
-    console.error('Database error:', err);
+    log.error('Database error:', err);
   }
 }
 
@@ -715,7 +726,7 @@ async function forgotPassword(){
 auth.onAuthStateChanged(user => {
   if(user){
     // Already logged in — redirect straight to play
-    console.log('Already logged in:', user.email);
+    log.ok('Already logged in:', user.email);
     redirectAfterLogin(user);
   }
 });

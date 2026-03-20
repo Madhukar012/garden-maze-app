@@ -2409,6 +2409,16 @@ for(let i=0;i<3;i++){
 // ============================================================
 // FIREBASE — Progress Save & Load
 // ============================================================
+
+const isDev = window.location.hostname === 'localhost' ||
+              window.location.hostname === '127.0.0.1';
+const log = {
+  info:  (...args) => { if(isDev) console.log('ℹ️', ...args); },
+  ok:    (...args) => { if(isDev) console.log('✅', ...args); },
+  warn:  (...args) => { if(isDev) console.warn('⚠️', ...args); },
+  error: (...args) => { if(isDev) console.error('❌', ...args); },
+};
+
 let FB_USER = null; // logged in user, null if guest
 let isOnline = navigator.onLine;
 let pendingSave = false; // tracks if a save is waiting
@@ -2479,7 +2489,7 @@ function initFirebase(){
         firebase.auth().onAuthStateChanged(user => {
           if(!user && FB_USER){
             // Session expired — user was logged in but token is gone
-            console.warn('Session expired — redirecting to login');
+            log.warn('Session expired — redirecting to login');
             sessionStorage.clear();
             FB_USER = null;
             showSessionExpired();
@@ -2488,11 +2498,11 @@ function initFirebase(){
       }
 
     } else {
-      console.log('ℹ️ No logged in user — playing as guest');
+      log.ok('ℹ️ No logged in user — playing as guest');
     }
   } catch(e){
     FB_USER = null;
-    console.warn('Firebase init failed:', e);
+    log.warn('Firebase init failed:', e);
   }
 }
 
@@ -2524,7 +2534,7 @@ async function loadProgress(){
     const doc = await firebase.firestore()
       .collection('users').doc(FB_USER.uid).get();
     if(doc.exists) return doc.data();
-  } catch(e){ console.warn('Could not load progress:', e); }
+  } catch(e){ log.warn('Could not load progress:', e); }
   return null;
 }
 
@@ -2569,11 +2579,11 @@ async function saveProgress(){
         updatedAt:     firebase.firestore.FieldValue.serverTimestamp(),
       });
 
-    console.log('✅ Progress saved!');
+    log.ok('✅ Progress saved!');
     pendingSave = false;
 
   } catch(e){
-    console.warn('Save failed:', e);
+    log.warn('Save failed:', e);
 
     // Notify user clearly with specific reason
     if(e.code === 'unavailable' || e.code === 'failed-precondition'){
@@ -2608,8 +2618,8 @@ async function resetProgressInDB(){
       .collection('leaderboard').doc(FB_USER.uid)
       .update({ coins: 100, puzzlesSolved: 0,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-    console.log('✅ Progress reset in Firebase');
-  } catch(e){ console.warn('Could not reset progress:', e); }
+    log.ok('✅ Progress reset in Firebase');
+  } catch(e){ log.warn('Could not reset progress:', e); }
 }
 
 // Start game — loading saved progress if available
@@ -2637,10 +2647,10 @@ async function startWithProgress(){
           sessionStorage.setItem('gm_uid',   user.uid);
           sessionStorage.setItem('gm_name',  FB_USER.name);
           sessionStorage.setItem('gm_email', user.email);
-          console.log('✅ Firebase Auth restored session:', FB_USER.name);
+          log.info('✅ Firebase Auth restored session:', FB_USER.name);
         } else {
           FB_USER = null;
-          console.log('ℹ️ No logged in user — playing as guest');
+          console.ok('ℹ️ No logged in user — playing as guest');
         }
         resolve();
       });

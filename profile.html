@@ -252,6 +252,16 @@ nav{
 <script src="firebase-config.js"></script>
 
 <script>
+
+const isDev = window.location.hostname === 'localhost' ||
+              window.location.hostname === '127.0.0.1';
+const log = {
+  info:  (...args) => { if(isDev) console.log('ℹ️', ...args); },
+  ok:    (...args) => { if(isDev) console.log('✅', ...args); },
+  warn:  (...args) => { if(isDev) console.warn('⚠️', ...args); },
+  error: (...args) => { if(isDev) console.error('❌', ...args); },
+};
+
 const PUZZLES = [
   { icon:'🌸', name:'The Whispering Flowers', diff:'Easy',        key:'pattern'    },
   { icon:'🦋', name:'The Butterfly Garden',   diff:'Easy-Medium', key:'memory'     },
@@ -287,7 +297,7 @@ async function loadProfile(user){
       // Stats
       document.getElementById('statCoins').textContent  = data.coins || 100;
       document.getElementById('statSolved').textContent = (data.puzzlesSolved || 0) + '/5';
-      
+
       // Join date
       if(data.joinedAt){
         const d = data.joinedAt.toDate();
@@ -303,7 +313,7 @@ async function loadProfile(user){
       renderPuzzleProgress(data.solvedPuzzles || []);
     }
   } catch(err){
-    console.error('Error loading profile:', err);
+    log.error('Error loading profile:', err);
   }
 }
 
@@ -360,7 +370,7 @@ async function loadLeaderboard(myUid){
       `;
     }).join('');
   } catch(err){
-    console.error('Leaderboard error:', err);
+    log.error('Leaderboard error:', err);
     document.getElementById('leaderboardList').innerHTML =
       '<div class="empty-state"><span class="icon">⚠️</span>Could not load leaderboard.</div>';
   }
